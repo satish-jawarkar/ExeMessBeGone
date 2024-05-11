@@ -78,26 +78,16 @@ def sortCodeFiles():
 
     extension = input("Enter file extension using .")
 
-    folder_name = f"All {extension} Files"
-    folder_path = os.path.join(destination_dir, folder_name)
-
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
 
     for file_name in os.listdir(source_dir):
         if file_name.endswith(extension):
             source_path = os.path.join(source_dir, file_name)
-            destination_path = os.path.join(folder_path, file_name)
-            ch = input("Do you want to move it or copy? (m/c)")
-            if(ch == "m"):
-                shutil.move(source_path, destination_path)
-                print(f"All files are moved at {folder_path}")
-            elif(ch == "c"):
-                shutil.copy(source_path, destination_path)
-                print(f"All files are copied at {folder_path}")
-            # shutil.move(source_path, destination_path)
-            
-    # print(f"All files are sorted at {folder_path}")
+            destination_path = os.path.join(destination_dir, file_name)
+            shutil.move(source_path, destination_path)
+
+    print("All files are sorted!")
 
 
 
