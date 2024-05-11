@@ -20,6 +20,8 @@ print("All Python processes terminated.")
 
 
 
+######### DO NOT USE BELOW CODE IN YOUR PC OTHERWISE PC WILL GO IN "CRITICAL PROCESS DIED" ##########
+
 import psutil
 
 # List of processes to exclude from termination
