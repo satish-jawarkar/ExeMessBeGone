@@ -101,14 +101,6 @@ def sortCodeFiles():
 
 
 
-
-
-
-
-
-
-
-
 # Choice for all 3 modules
 def options():
     print("\n1. Check all .exe files and remove it!")
