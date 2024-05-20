@@ -1,26 +1,23 @@
-import pywinstyles
 import customtkinter as ctk
-from tkinter.colorchooser import askcolor
 import tkinter
 import os
 import time
-import keyboard
 import shutil
-# import tkinter as tk
 from tkinter import filedialog
 import threading
 import itertools
-from tkinter import font
+import pywinstyles
 
 root = ctk.CTk()
 root.geometry("700x500")
 root.title("ExE BE-GonE")
-# ctk.set_appearance_mode("dark")
 pywinstyles.apply_style(root, "aero")
 pywinstyles.change_header_color(root, color="blue")
+
 output_label = None
 input_entry = None
 animation_label = None
+confirm_button = None
 
 # Define fonts
 default_font = ("Comic Sans MS", 12)
@@ -29,25 +26,23 @@ input_font = ("Comic Sans MS", 12)
 
 def deleteExe(fileList):
     global output_label, input_entry
-    output_label.configure(text="Press Enter to Confirm or Ctrl + C to Terminate")
-    
-    def wait_for_enter():
-        input_entry.bind("<Return>", lambda e: perform_deletion(fileList))
-        input_entry.focus()
+    output_label.configure(text="Press 'Confirm' to remove the files or 'Cancel' to terminate")
 
-    def perform_deletion(fileList):
+    def perform_deletion():
         for f in fileList:
             os.remove(f)
             current_text = output_label.cget("text")
             output_label.configure(text=f"{current_text}\n{f} removed")
         output_label.configure(text=f"{current_text}\nAll selected files removed")
 
-    threading.Thread(target=wait_for_enter).start()
+    confirm_button.configure(command=perform_deletion)
+    confirm_button.pack(side="bottom", pady=10, padx=20)
 
 def searchExe():
-    global output_label, input_entry, animation_label
+    global output_label, input_entry, animation_label, confirm_button
+    clear_screen()
     directory = "C:/Users/Admin/Downloads/"
-    file_extension = ".exe"  # Example extension
+    file_extension = ".exe"
     fileList = []
 
     output_label.configure(text="Please wait for a few seconds...")
@@ -65,16 +60,13 @@ def searchExe():
                     fileList.append(filePath)
                     current_text = output_label.cget("text")
                     output_label.configure(text=f"{current_text}\n{filePath}")
-                    time.sleep(0.3)  # Delay to show files one by one
+                    time.sleep(0.3)
         stop_animation()
+        output_label.configure(text=f"{output_label.cget('text')}\n\nAre we sure to remove all files from your PC!? (y/n)")
+        input_entry.pack(side="bottom", pady=10, padx=20, anchor="s")
 
-        current_text = output_label.cget("text")
-        def confirm_deletion():
-            output_label.configure(text=f"{current_text}\n\nAre we sure to remove all files from your PC!? (y/n)")
-            input_entry.pack(side="bottom", pady=10, padx=20, anchor="s")
-            input_entry.bind("<Return>", lambda e: get_user_input(fileList))
-
-        threading.Thread(target=confirm_deletion).start()
+        confirm_button.configure(command=lambda: get_user_input(fileList))
+        confirm_button.pack(side="bottom", pady=10, padx=20)
 
     threading.Thread(target=perform_search).start()
 
@@ -98,40 +90,71 @@ def start_animation():
         update_text()
     threading.Thread(target=animate).start()
 
-
-#Sorting all code files
-def sortCodeFiles():
-    root = tkinter.Tk()
-    root.withdraw()
-    print("Choose source folder")
+def choose_source_directory():
+    root_dir = tkinter.Tk()
+    root_dir.withdraw()
     source_dir = filedialog.askdirectory()
-    root.destroy()
+    root_dir.destroy()
+    source_entry.delete(0, 'end')
+    source_entry.insert(0, source_dir)
 
-    destination_dir = r"C:\Users\Admin\Desktop\Codefiles"
+def sortCodeFiles():
+    global source_entry, extension_entry, move_copy_choice, output_label, confirm_button
+    clear_screen()
 
-    extension = input("Enter file extension using .")
+    source_entry.pack(pady=10, padx=20, fill="x")
+    browse_button.pack(pady=10, padx=20)
+    extension_entry.pack(pady=10, padx=20, fill="x")
+    move_radio.pack(pady=5, padx=20)
+    copy_radio.pack(pady=5, padx=20)
 
-    folder_name = f"All {extension} Files"
-    folder_path = os.path.join(destination_dir, folder_name)
+    def perform_sort():
+        source_dir = source_entry.get()
+        if not source_dir:
+            output_label.configure(text="Please choose a source directory")
+            return
 
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+        extension = extension_entry.get().strip()
+        if not extension.startswith('.'):
+            extension = '.' + extension
 
-    for file_name in os.listdir(source_dir):
-        if file_name.endswith(extension):
+        move_copy = move_copy_choice.get()
+        if move_copy not in ["m", "c"]:
+            output_label.configure(text="Please choose a valid option to move or copy files")
+            return
+
+        destination_dir = r"C:\Users\Admin\Desktop\Codefiles"
+        folder_name = f"All {extension} Files"
+        folder_path = os.path.join(destination_dir, folder_name)
+
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        fileList = [f for f in os.listdir(source_dir) if f.endswith(extension)]
+
+        for file_name in fileList:
             source_path = os.path.join(source_dir, file_name)
             destination_path = os.path.join(folder_path, file_name)
-            ch = input("Do you want to move it or copy? (m/c)")
-            if(ch == "m"):
+            if move_copy == "m":
                 shutil.move(source_path, destination_path)
-                print(f"All files are moved at {folder_path}")
-            elif(ch == "c"):
+                output_label.configure(text=f"{output_label.cget('text')}\nMoved: {file_name}")
+            elif move_copy == "c":
                 shutil.copy(source_path, destination_path)
-                print(f"All files are copied at {folder_path}")
-            # shutil.move(source_path, destination_path)
-            
-    # print(f"All files are sorted at {folder_path}")
+                output_label.configure(text=f"{output_label.cget('text')}\nCopied: {file_name}")
 
+        output_label.configure(text=f"All files are sorted at {folder_path}")
+
+    confirm_button.configure(command=perform_sort)
+    confirm_button.pack(side="bottom", pady=10, padx=20)
+
+def clear_screen():
+    global output_label, input_entry, animation_label, source_entry, extension_entry, move_radio, copy_radio, confirm_button
+    for widget in scrollable_frame.winfo_children():
+        widget.pack_forget()
+    output_label.configure(text="")
+    input_entry.pack_forget()
+    animation_label.configure(text="")
+    confirm_button.pack_forget()
 
 # Navbar Frame
 navbar_frame = ctk.CTkFrame(root, width=180, fg_color="#0d0d0d")
@@ -158,15 +181,14 @@ animation_label = ctk.CTkLabel(scrollable_frame, text="", fg_color="#1a1a1a", te
 animation_label.pack(side="bottom", pady=10, padx=20, anchor="s")
 
 input_entry = ctk.CTkEntry(scrollable_frame, font=input_font)
-# pywinstyles.set_opacity(exe_button, value=0.5) 
+confirm_button = ctk.CTkButton(scrollable_frame, text="Confirm")
 
-# sort_button.place(relx=0.9, rely=0.5, anchor=tkinter.CENTER)
-
-
-# button = customtkinter.CTkButton(master=root_tk,
-#                                  fg_color=("black", "lightgray"),  # <- tuple color for light and dark theme
-#                                  text="CTkButton",
-#                                  command=button_event)
-# button.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+# Input Elements for Sort Code Files
+source_entry = ctk.CTkEntry(scrollable_frame, font=input_font)
+browse_button = ctk.CTkButton(scrollable_frame, text="Browse", command=choose_source_directory)
+extension_entry = ctk.CTkEntry(scrollable_frame, font=input_font)
+move_copy_choice = ctk.StringVar(value="m")
+move_radio = ctk.CTkRadioButton(scrollable_frame, text="Move", variable=move_copy_choice, value="m")
+copy_radio = ctk.CTkRadioButton(scrollable_frame, text="Copy", variable=move_copy_choice, value="c")
 
 root.mainloop()
